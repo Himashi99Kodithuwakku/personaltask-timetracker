@@ -1,0 +1,15 @@
+
+.Toastify__toast--success {
+  background-color: lightpink !important;
+  color: black !important;
+  font-weight: bold;
+}
+
+.Toastify__toast--error {
+  background-color: #f7e8ea !important;
+  color: black !important;
+}
+
+.Toastify__progress-bar {
+  background: black !important;
+}
