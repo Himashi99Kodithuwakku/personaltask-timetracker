@@ -36,7 +36,7 @@ const userTable = async  () => {
             console.log("Users table created successfully");
             process.exit();
     }catch(err){
-        console.error("unexpected error occured when creating user table",err );
+        console.error("unexpected error occured creating user table",err );
         process.exit(1);
     }
 };
