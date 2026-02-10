@@ -3,24 +3,61 @@ import HomeNavbar from "../components/Navbar";
 import SidePanel from "../components/SidePanel";
 import { Container,Row,Col, Button,Table,Pagination,Form} from "react-bootstrap";
 import { useState } from "react";
+import CreateTaskModal from "../components/modals/CreateTaskModal";
+import AddCategoryModal from "../components/modals/AddCategory";
 import { useEffect } from "react";
 import axios from "axios";
+import EditTaskModal from "../components/modals/EditTaskModal";
+import {toast} from "react-toastify";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay,faStop } from '@fortawesome/free-solid-svg-icons';
+import { faPlay,faStop,faPenToSquare,faTrash } from '@fortawesome/free-solid-svg-icons';
 
 
-export default function DashboardPage(){
 
+
+export default function EditMyTaskPage(){
+
+    const [showCreateModal,setShowCreateModal]=useState(false);
+    const [showCategoryModal,setShowCategoryModal]=useState(false);
     const [tasks, setTasks] = useState<any[]>([]);
 
     const [currentPage, setCurrentPage] = useState(1);
-    const rowsPerPage = 5;
+    const rowsPerPage = 6;
 
     const [timers, setTimers] = useState<{[key:string]: number}>({});
     const [runningTask, setRunningTask] = useState<string | null>(null);
     const [totalTimes, setTotalTimes] = useState<{ [key: string]: number }>({});
+    const [showEditTaskModal,setShowEditTaskModal]=useState(false);
+    const [selectedTask,setSelectedtask] = useState<any>(null);
     const [sortBy, setSortBy ] = useState ("");
-    // const currentTasks = sortedTasks.slice(indexOfFirstRow, indexOfLastRow);
+
+
+
+
+    const OpenCreateModal =()=>{
+        setShowCreateModal(true);
+    }
+
+    const CloseCreateModal =()=>{
+        setShowCreateModal(false);
+    }
+
+    const OpenCategoryModal =()=>{
+        setShowCategoryModal(true);
+    }
+
+    const CloseCategoryModal =()=>{
+        setShowCategoryModal(false);
+    }
+
+    const OpenEditTaskModal =(task:any)=>{
+        setSelectedtask(task);
+        setShowEditTaskModal(true);
+    }
+
+    const CloseEditTaskModal =()=>{
+        setShowEditTaskModal(false);
+    }
 
     const loadTasks = async()=>{
         try{
@@ -53,26 +90,25 @@ export default function DashboardPage(){
         setCurrentPage(pageNumber);
 
     const taskStatus = async (taskId: string,status:boolean) => {
+    try {
+        const token = localStorage.getItem("token");
 
-        try {
-            const token = localStorage.getItem("token");
-
-            await axios.put(
-            `http://localhost:5011/api/tasks/task-status/${taskId}`,
-            {is_completed:status},
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    },
-            }
-            );
-
-            loadTasks();
-        } catch (err) {
-            console.error("Failed to update status", err);
-            
+        await axios.put(
+        `http://localhost:5011/api/tasks/task-status/${taskId}`,
+        {is_completed:status},
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                },
         }
-        };
+        );
+
+        loadTasks();
+    } catch (err) {
+        console.error("Failed to update status", err);
+        toast.error("Failed to update status");
+    }
+    };
 
     const startTimer = async(taskId:string)=>{
         const token = localStorage.getItem("token");
@@ -87,7 +123,6 @@ export default function DashboardPage(){
 
         localStorage.setItem("runningTask", taskId);
         localStorage.setItem("runningTaskStart", Date.now().toString());
-
         setRunningTask(taskId);
         setTimers(prev=>({
             ...prev,
@@ -108,7 +143,6 @@ export default function DashboardPage(){
 
         localStorage.removeItem("runningTask");
         localStorage.removeItem("runningTaskStart");
-
         setRunningTask(null);
         loadTasks();
     };
@@ -174,6 +208,45 @@ export default function DashboardPage(){
         console.log("TotalTimes:", totalTimes);
     };
 
+    const deleteTask = async(taskId:string)=>{
+        try{
+            const token = localStorage.getItem("token");
+            await axios.delete(`http://localhost:5011/api/tasks/delete-task/${taskId}`,{
+                 
+            headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    
+
+            });
+
+            toast.success("Task deleted successfully");
+            toast.dismiss();
+            loadTasks();
+
+        }catch(err){
+            console.error("Task deletion failed",err);
+            toast.error("Task deletion failed");
+        }
+    };
+
+    const confirmDeletion = (taskId:string)=>{
+        toast.info(
+            <div>
+                <p> Are you sure you want to delete this task?</p>
+                <div style={{display:"flex",justifyContent:"space-between"  }}>
+                    <Button variant="danger" className="mx-2" size="sm" onClick={()=>deleteTask(taskId)} style={{width:"80px", borderRadius:"50px" }}> YES</Button>
+                    <Button variant="dark" size="sm" onClick={()=> toast.dismiss()} style={{width:"80px", borderRadius:"50px" }}> NO</Button>
+
+                </div>
+            </div>,
+            {
+                autoClose:false,
+                closeOnClick:false,
+            }
+        );
+    };
+
     const sortedTasks = [...tasks].sort((a,b)=>{
         switch(sortBy){
             case "Date" :
@@ -199,30 +272,24 @@ export default function DashboardPage(){
     const currentTasks = sortedTasks.slice(indexOfFirstRow, indexOfLastRow);
 
 
-
-    const totalTasks = tasks.length;
-    const totalTasksCompleted = tasks.filter((t: any) => t.is_completed).length;
-    const totalTasksPending = tasks.filter((t: any) => !t.is_completed).length;
-
-
     return  (
         <>
         <HomeNavbar/>
         
-        <Container fluid className="vh-100 p-0" style={{backgroundColor: "#f7e8ea", marginTop:"50px"}} >
-            <Row className="flex-grow-1 w-100 m-0" >
+        <Container fluid className="vh-100 p-0" style={{backgroundColor:"#f7e8ea", marginTop:"50px"}}>
+            <Row className="flex-grow-1 w-100 m-0">
                 <Col md={2} className="p-0">
                       <SidePanel/>
                 </Col>
-                <Col md={10} className="p-4" style={{ marginLeft: "220px", height: "calc(100vh - 70px)"}} >
+                <Col md={10} className="p-4" style={{ marginLeft: "220px", height: "calc(100vh - 70px)"}}>
                 <div style={{ flexShrink: 0 }}>
-                     <h3 className="text-center mb-2" style={{fontWeight:"bolder"}}>DASHBOARD</h3>
+                    <h3 className="text-center mb-2" style={{fontWeight:"bolder"}}>EDIT & MANAGE TASKS</h3>
                     <hr />
-                   
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-
-                   
-
+                   <div className="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <Button variant="dark" onClick={OpenCreateModal} className="mx-4 px-3" style={{ borderRadius:"50px"}}>Create New Task</Button>
+                            <Button onClick={OpenCategoryModal} className="mx-1 px-3" style={{backgroundColor:"lightpink" , border:"lightpink", color:"black", borderRadius:"50px" }}>Add New Category</Button>
+                        </div>
                     <Form.Group className="mb-3" >
                         <Form.Label>Sort by</Form.Label><br></br>
                             <Form.Select 
@@ -242,32 +309,14 @@ export default function DashboardPage(){
                     </Form.Group>
 
                     
+                    
                     </div>
                 </div>
-
-
-                <Row className="mb-3">
-                    <Col md={4}>
-                        <div className="p-2  text-center" style={{backgroundColor:"lightpink",color:"black",fontWeight:"bold"}}>
-                        Total Tasks:  {totalTasks}
-                        </div>
-                    </Col>
-                    <Col md={4}>
-                        <div className="p-2  bg-success text-center" style={{backgroundColor:"lightpink",color:"black",fontWeight:"bold"}}>
-                        Completed: {totalTasksCompleted}
-                        </div>
-                    </Col>
-                    <Col md={4}>
-                        <div className="p-2  bg-warning text-center" style={{backgroundColor:"lightpink",color:"black",fontWeight:"bold"}}>
-                        Pending: {totalTasksPending}
-                        </div>
-                    </Col>
                 
-                </Row>
                 <div style={{ flex: 1, overflowY: "auto", marginTop: "15px" }} >
-                    <Table striped bordered hover responsive className="mt-4">
+                    <Table striped bordered hover variant="light" className="mt-4">
                         <thead className="text-center">
-                            <tr>
+                            <tr >
                             <th>Task Id</th>
                             <th>Task</th>
                             <th>Category</th>
@@ -275,6 +324,7 @@ export default function DashboardPage(){
                             <th>Time Spent</th>
                             <th colSpan={2} >Track Time</th>
                             <th>Status</th>
+                            <th colSpan={2}>EDIT/DELETE</th>
                             
                         </tr>
 
@@ -297,17 +347,19 @@ export default function DashboardPage(){
                                 </td>
                                 <td>
                                     <select
-                                        className="form-select form-select-sm text-center"
-                                        value={task.is_completed ? "completed" : "pending"}
-                                        onChange={(e) => taskStatus(task.taskid, e.target.value === "completed")}
-                                        style={{backgroundColor:task.is_completed ? "green" : "orange", color:"white" ,width:"150px", borderRadius:"50px"}}
+                                    className="form-select form-select-sm text-center"
+                                    value={task.is_completed ? "completed" : "pending"}
+                                    onChange={(e) => taskStatus(task.taskid, e.target.value === "completed")}
+                                    style={{backgroundColor:task.is_completed ? "green" : "orange", color:"white" ,width:"150px", borderRadius:"50px"}}
                                     >
                                 
-                                    <option value="pending" >Pending</option>
+                                    <option value="pending">Pending</option>
                                     <option value="completed">Completed</option>
                                 </select>
                                     
                                 </td>
+                                <td><Button variant="dark" onClick={()=>OpenEditTaskModal(task)} style={{width:"60px", borderRadius:"50px" }}><FontAwesomeIcon icon={faPenToSquare} /></Button></td>
+                                <td><Button variant="danger" onClick={()=> confirmDeletion(task.taskid)} style={{width:"60px", borderRadius:"50px" }}><FontAwesomeIcon icon={faTrash} /></Button></td>
                                 
                                     
                             </tr>
@@ -316,12 +368,13 @@ export default function DashboardPage(){
                         </tbody>
                     </Table>
 
-                      <Pagination className="justify-content-center">
+                      <Pagination className="justify-content-center"  >
                         {Array.from({ length: totalPages }, (_, idx) => (
                             <Pagination.Item
                             key={idx + 1}
                             active={currentPage === idx + 1}
                             onClick={() => handlePageChange(idx + 1)}
+                            
                             >
                             {idx + 1}
                             </Pagination.Item>
@@ -332,10 +385,18 @@ export default function DashboardPage(){
             </Row> 
         </Container>
 
+        <CreateTaskModal show={showCreateModal} handleClose={CloseCreateModal} onTaskAdded={loadTasks} />
+        <AddCategoryModal show={showCategoryModal} handleClose={CloseCategoryModal}/>
+        <EditTaskModal show={showEditTaskModal} handleClose={CloseEditTaskModal} onTaskAdded={loadTasks} task={selectedTask} onTaskUpdated={loadTasks}/>
+
+        
+           
+            
+
+       
   
          </>
 
-       
        
    );
   

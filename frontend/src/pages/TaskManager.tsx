@@ -3,18 +3,23 @@ import HomeNavbar from "../components/Navbar";
 import SidePanel from "../components/SidePanel";
 import { Container,Row,Col, Button,Table,Pagination,Form} from "react-bootstrap";
 import { useState } from "react";
+import CreateTaskModal from "../components/modals/CreateTaskModal";
+import AddCategoryModal from "../components/modals/AddCategory";
 import { useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay,faStop } from '@fortawesome/free-solid-svg-icons';
 
 
-export default function DashboardPage(){
 
+export default function TaskManagementPage(){
+
+    const [showCreateModal,setShowCreateModal]=useState(false);
+    const [showCategoryModal,setShowCategoryModal]=useState(false);
     const [tasks, setTasks] = useState<any[]>([]);
 
     const [currentPage, setCurrentPage] = useState(1);
-    const rowsPerPage = 5;
+    const rowsPerPage = 6;
 
     const [timers, setTimers] = useState<{[key:string]: number}>({});
     const [runningTask, setRunningTask] = useState<string | null>(null);
@@ -22,6 +27,26 @@ export default function DashboardPage(){
     const [sortBy, setSortBy ] = useState ("");
     // const currentTasks = sortedTasks.slice(indexOfFirstRow, indexOfLastRow);
 
+
+
+
+    const OpenCreateModal =()=>{
+        setShowCreateModal(true);
+    }
+
+    const CloseCreateModal =()=>{
+        setShowCreateModal(false);
+    }
+
+    const OpenCategoryModal =()=>{
+        setShowCategoryModal(true);
+    }
+
+    const CloseCategoryModal =()=>{
+        setShowCategoryModal(false);
+    }
+
+    
     const loadTasks = async()=>{
         try{
             const token = localStorage.getItem("token");
@@ -84,10 +109,9 @@ export default function DashboardPage(){
                     },
         }
         );
-
+   // time keep going 
         localStorage.setItem("runningTask", taskId);
         localStorage.setItem("runningTaskStart", Date.now().toString());
-
         setRunningTask(taskId);
         setTimers(prev=>({
             ...prev,
@@ -198,29 +222,25 @@ export default function DashboardPage(){
 
     const currentTasks = sortedTasks.slice(indexOfFirstRow, indexOfLastRow);
 
-
-
-    const totalTasks = tasks.length;
-    const totalTasksCompleted = tasks.filter((t: any) => t.is_completed).length;
-    const totalTasksPending = tasks.filter((t: any) => !t.is_completed).length;
-
-
     return  (
         <>
         <HomeNavbar/>
         
-        <Container fluid className="vh-100 p-0" style={{backgroundColor: "#f7e8ea", marginTop:"50px"}} >
-            <Row className="flex-grow-1 w-100 m-0" >
-                <Col md={2} className="p-0">
+        <Container fluid className="vh-100 p-0" style={{backgroundColor:"#f7e8ea", marginTop:"50px"}}>
+            <Row className="flex-grow-1 w-100 m-0">
+                <Col md={2} className="p-0 bg-light">
                       <SidePanel/>
                 </Col>
-                <Col md={10} className="p-4" style={{ marginLeft: "220px", height: "calc(100vh - 70px)"}} >
+                <Col md={10} className="p-4" style={{ marginLeft: "220px", height: "calc(100vh - 70px)", overflowY: "auto" }}>
                 <div style={{ flexShrink: 0 }}>
-                     <h3 className="text-center mb-2" style={{fontWeight:"bolder"}}>DASHBOARD</h3>
+                    <h3 className="text-center mb-2" style={{fontWeight:"bolder"}} >MY TASKS</h3>
                     <hr />
-                   
                     <div className="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <Button variant="dark" onClick={OpenCreateModal} className="mx-4 px-3" style={{ borderRadius:"50px"}}>Create New Task</Button>
+                            <Button onClick={OpenCategoryModal} className="mx-1 px-3" style={{backgroundColor:"lightpink" , border:"lightpink", color:"black", borderRadius:"50px" }}>Add New Category</Button>
 
+                        </div>
                    
 
                     <Form.Group className="mb-3" >
@@ -242,28 +262,9 @@ export default function DashboardPage(){
                     </Form.Group>
 
                     
+                    
                     </div>
                 </div>
-
-
-                <Row className="mb-3">
-                    <Col md={4}>
-                        <div className="p-2  text-center" style={{backgroundColor:"lightpink",color:"black",fontWeight:"bold"}}>
-                        Total Tasks:  {totalTasks}
-                        </div>
-                    </Col>
-                    <Col md={4}>
-                        <div className="p-2  bg-success text-center" style={{backgroundColor:"lightpink",color:"black",fontWeight:"bold"}}>
-                        Completed: {totalTasksCompleted}
-                        </div>
-                    </Col>
-                    <Col md={4}>
-                        <div className="p-2  bg-warning text-center" style={{backgroundColor:"lightpink",color:"black",fontWeight:"bold"}}>
-                        Pending: {totalTasksPending}
-                        </div>
-                    </Col>
-                
-                </Row>
                 <div style={{ flex: 1, overflowY: "auto", marginTop: "15px" }} >
                     <Table striped bordered hover responsive className="mt-4">
                         <thead className="text-center">
@@ -332,10 +333,16 @@ export default function DashboardPage(){
             </Row> 
         </Container>
 
+        <CreateTaskModal show={showCreateModal} handleClose={CloseCreateModal} onTaskAdded={loadTasks} />
+        <AddCategoryModal show={showCategoryModal} handleClose={CloseCategoryModal}/>
+        
+           
+            
+
+       
   
          </>
 
-       
        
    );
   

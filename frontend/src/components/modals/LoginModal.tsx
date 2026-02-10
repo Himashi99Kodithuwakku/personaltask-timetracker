@@ -110,7 +110,7 @@ function LoginModal({show,handleClose}: LoginModalProps) {
                             <Form.Group className="mb-3" controlId="formBasicPassword">
                                 <Form.Label>Password</Form.Label><br></br>
                                 <Form.Control type={showPassword ? "text" : "password"}
-                                              placeholder="Cretae a New Password" 
+                                              placeholder="Enter Password" 
                                               name="password" 
                                               onChange={handleChangeData}/>
 
@@ -135,6 +135,7 @@ function LoginModal({show,handleClose}: LoginModalProps) {
                                         color: 'black',
                                         width: '200px',   
                                         fontWeight: 'normal',
+                                        borderRadius:"50px",
                                         transition: 'all 0.3s'
                                     }}
                                     onMouseEnter={e => (e.currentTarget.style.fontWeight = 'bold')}

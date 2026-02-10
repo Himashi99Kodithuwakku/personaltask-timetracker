@@ -21,6 +21,10 @@ const taskTable = async () =>{
         `);
 
         await pool.query(`
+            ALTER TABLE userTask ADD COLUMN IF NOT EXISTS due_date DATE;
+       `);
+
+        await pool.query(`
             CREATE OR REPLACE FUNCTION generate_task_id()
             RETURNS TRIGGER AS $$ 
             BEGIN 
@@ -38,7 +42,8 @@ const taskTable = async () =>{
             EXECUTE FUNCTION generate_task_id();
 
         `);
-        console.log("User Tasks Table created Successfully");
+        console.log("User Tasks Table created Successfully/Updated user task successfully");
+        
         process.exit();
 
     }catch(err){
