@@ -183,6 +183,7 @@ function RegisterModal({show,handleClose}: RegisterModalProps) {
                                         color: 'black',
                                         width: '200px',   
                                         fontWeight: 'normal',
+                                        borderRadius:"50px",
                                         transition: 'all 0.3s'
                                     }}
                                     onMouseEnter={e => (e.currentTarget.style.fontWeight = 'bold')}

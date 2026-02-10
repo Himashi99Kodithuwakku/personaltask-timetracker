@@ -14,6 +14,7 @@
     "@types/node": "^16.18.126",
     "axios": "^1.13.4",
     "bootstrap": "^5.3.8",
+    "dayjs": "^1.11.19",
     "jwt-decode": "^4.0.0",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.10",

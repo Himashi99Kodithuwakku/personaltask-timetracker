@@ -1,12 +1,14 @@
 
 import HomeNavbar from "../components/Navbar";
 import SidePanel from "../components/SidePanel";
-import { Container,Row,Col, Button,Table,Pagination} from "react-bootstrap";
+import { Container,Row,Col, Button,Table,Pagination,Form} from "react-bootstrap";
 import { useState } from "react";
 import CreateTaskModal from "../components/modals/CreateTaskModal";
 import AddCategoryModal from "../components/modals/AddCategory";
 import { useEffect } from "react";
 import axios from "axios";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlay,faStop } from '@fortawesome/free-solid-svg-icons';
 
 
 
@@ -17,16 +19,15 @@ export default function TaskManagementPage(){
     const [tasks, setTasks] = useState<any[]>([]);
 
     const [currentPage, setCurrentPage] = useState(1);
-    const rowsPerPage = 7;
+    const rowsPerPage = 6;
 
     const [timers, setTimers] = useState<{[key:string]: number}>({});
     const [runningTask, setRunningTask] = useState<string | null>(null);
     const [totalTimes, setTotalTimes] = useState<{ [key: string]: number }>({});
+    const [sortBy, setSortBy ] = useState ("");
+    // const currentTasks = sortedTasks.slice(indexOfFirstRow, indexOfLastRow);
 
 
-
-
-   
 
 
     const OpenCreateModal =()=>{
@@ -44,11 +45,6 @@ export default function TaskManagementPage(){
     const CloseCategoryModal =()=>{
         setShowCategoryModal(false);
     }
-
-
-
-
-        
 
     
     const loadTasks = async()=>{
@@ -75,31 +71,33 @@ export default function TaskManagementPage(){
 
     const indexOfLastRow = currentPage * rowsPerPage;
     const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-    const currentTasks = tasks.slice(indexOfFirstRow, indexOfLastRow);
+    // const currentTasks = tasks.slice(indexOfFirstRow, indexOfLastRow);
     const totalPages = Math.max(1, Math.ceil(tasks.length / rowsPerPage));
 
     const handlePageChange = (pageNumber: number) => 
         setCurrentPage(pageNumber);
 
     const taskStatus = async (taskId: string,status:boolean) => {
-    try {
-        const token = localStorage.getItem("token");
 
-        await axios.put(
-        `http://localhost:5011/api/tasks/task-status/${taskId}`,
-        {is_completed:status},
-        {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                },
+        try {
+            const token = localStorage.getItem("token");
+
+            await axios.put(
+            `http://localhost:5011/api/tasks/task-status/${taskId}`,
+            {is_completed:status},
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    },
+            }
+            );
+
+            loadTasks();
+        } catch (err) {
+            console.error("Failed to update status", err);
+            
         }
-        );
-
-        loadTasks();
-    } catch (err) {
-        console.error("Failed to update status", err);
-    }
-    };
+        };
 
     const startTimer = async(taskId:string)=>{
         const token = localStorage.getItem("token");
@@ -111,6 +109,9 @@ export default function TaskManagementPage(){
                     },
         }
         );
+   // time keep going 
+        localStorage.setItem("runningTask", taskId);
+        localStorage.setItem("runningTaskStart", Date.now().toString());
         setRunningTask(taskId);
         setTimers(prev=>({
             ...prev,
@@ -128,9 +129,29 @@ export default function TaskManagementPage(){
                     },
         }
         );
+
+        localStorage.removeItem("runningTask");
+        localStorage.removeItem("runningTaskStart");
+
         setRunningTask(null);
         loadTasks();
     };
+
+    useEffect(() => {
+        const savedTask = localStorage.getItem("runningTask");
+        const savedStart = localStorage.getItem("runningTaskStart");
+
+        if(savedTask && savedStart){
+            setRunningTask(savedTask);
+
+            // Calculate elapsed time since timer started
+            const elapsed = Math.floor((Date.now() - parseInt(savedStart)) / 1000);
+            setTimers(prev => ({
+                ...prev,
+                [savedTask]: elapsed
+            }));
+        }
+    }, []);
 
     useEffect(() => {
         let interval: any;
@@ -177,22 +198,70 @@ export default function TaskManagementPage(){
         console.log("TotalTimes:", totalTimes);
     };
 
+    const sortedTasks = [...tasks].sort((a,b)=>{
+        switch(sortBy){
+            case "Date" :
+                const dateA = a.due_date ? new Date(a.due_date).getTime() : 0;
+                const dateB = b.due_date ? new Date(b.due_date).getTime() : 0;
+                return dateA-dateB;
+            case "Status" :
+                return(a.is_completed === b.is_completed) ? 0 : a.is_completed ? 1 : -1;
+            
+            case "Time"  :
+                return(totalTimes[a.taskid] || 0 ) - (totalTimes[b.taskid] || 0);
+
+            case "Category" :
+                return(a.categoryname.localeCompare(b.categoryname));
+            default:
+                return 0;
+
+
+
+        }
+    });
+
+    const currentTasks = sortedTasks.slice(indexOfFirstRow, indexOfLastRow);
+
     return  (
         <>
         <HomeNavbar/>
         
-        <Container fluid className="vh-100 d-flex p-0">
+        <Container fluid className="vh-100 p-0" style={{backgroundColor:"#f7e8ea", marginTop:"50px"}}>
             <Row className="flex-grow-1 w-100 m-0">
                 <Col md={2} className="p-0 bg-light">
                       <SidePanel/>
                 </Col>
-                <Col md={10} className="p-4 d-flex flex-column vh-100">
+                <Col md={10} className="p-4" style={{ marginLeft: "220px", height: "calc(100vh - 70px)", overflowY: "auto" }}>
                 <div style={{ flexShrink: 0 }}>
-                    <h3 className="text-center mb-2">My Task Manager</h3>
+                    <h3 className="text-center mb-2" style={{fontWeight:"bolder"}} >MY TASKS</h3>
                     <hr />
-                    <div>
-                    <Button onClick={OpenCreateModal} className="mx-3">Create New Task</Button>
-                    <Button onClick={OpenCategoryModal} className="mx-3">Add New Category</Button>
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <Button variant="dark" onClick={OpenCreateModal} className="mx-4 px-3" style={{ borderRadius:"50px"}}>Create New Task</Button>
+                            <Button onClick={OpenCategoryModal} className="mx-1 px-3" style={{backgroundColor:"lightpink" , border:"lightpink", color:"black", borderRadius:"50px" }}>Add New Category</Button>
+
+                        </div>
+                   
+
+                    <Form.Group className="mb-3" >
+                        <Form.Label>Sort by</Form.Label><br></br>
+                            <Form.Select 
+
+                                name="filter"
+                                value={sortBy}
+                                onChange={(e)=>setSortBy(e.target.value)}
+                                style={{width:"200px"}}>
+
+                                    <option value=""> Sort Tasks</option>
+                                    <option value="Date"> Date</option>
+                                    <option value="Time"> Time</option>
+                                    <option value="Category"> Category</option>
+                                    <option value="Status"> Status</option>
+
+                            </Form.Select>
+                    </Form.Group>
+
+                    
                     
                     </div>
                 </div>
@@ -211,7 +280,7 @@ export default function TaskManagementPage(){
                         </tr>
 
                         </thead>
-                        <tbody>
+                        <tbody className="text-center">
                         {currentTasks.map((task:any)=>(
                             <tr key={task.taskid}>
                                 <td>{task.taskid}</td>
@@ -222,19 +291,20 @@ export default function TaskManagementPage(){
                                 <td>{formatTime(timers[task.taskid] || 0)}</td>
                                 <td>
                                     {runningTask === task.taskid ? (
-                                        <Button variant="danger" onClick={() => stopTimer(task.taskid)}>Stop</Button>
+                                        <Button variant="danger" onClick={() => stopTimer(task.taskid)} style={{width:"50px", borderRadius:"50px" }}> <FontAwesomeIcon icon={faStop}/></Button>
                                     ) : (
-                                        <Button variant="success" onClick={() => startTimer(task.taskid)}>Start</Button>
+                                        <Button variant="dark" onClick={() => startTimer(task.taskid)} style={{width:"50px", borderRadius:"50px" }}> <FontAwesomeIcon icon={faPlay}/></Button>
                                     )}
                                 </td>
                                 <td>
                                     <select
-                                    className="form-select form-select-sm"
-                                    value={task.is_completed ? "completed" : "pending"}
-                                    onChange={(e) => taskStatus(task.taskid, e.target.value === "completed")}
+                                        className="form-select form-select-sm text-center"
+                                        value={task.is_completed ? "completed" : "pending"}
+                                        onChange={(e) => taskStatus(task.taskid, e.target.value === "completed")}
+                                        style={{backgroundColor:task.is_completed ? "green" : "orange", color:"white" ,width:"150px", borderRadius:"50px"}}
                                     >
                                 
-                                    <option value="pending">Pending</option>
+                                    <option value="pending" >Pending</option>
                                     <option value="completed">Completed</option>
                                 </select>
                                     

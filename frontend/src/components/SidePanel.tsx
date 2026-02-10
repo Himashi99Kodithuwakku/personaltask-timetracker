@@ -10,21 +10,22 @@ const SidePanel = ()=> {
             padding: "15px",
             position: "fixed",
             left:0,
-            top:0,
-            
-
+            top:50,
+            overflowY:"auto"
 
         }}>
-           <h3 style={{color:"lightpink",
-                     fontWeight: "bold"
-           }} >Dashboard</h3>
+           
+
+            <Nav className="flex-column mt-3">
+                <Nav.Link as ={Link} to="/user-dashboard" style={{color:"white"}}>Dashboard</Nav.Link>
+           </Nav>
 
            <Nav className="flex-column mt-3">
                 <Nav.Link as ={Link} to="/user-task-manager" style={{color:"white"}}>My Tasks</Nav.Link>
            </Nav>
 
             <Nav className="flex-column mt-3">
-                <Nav.Link as ={Link} to="/user-edit-task-manager" style={{color:"white"}}>Edit My tasks </Nav.Link>
+                <Nav.Link as ={Link} to="/user-edit-task-manager" style={{color:"white"}}>Edit & Manage Tasks </Nav.Link>
            </Nav>
 
 

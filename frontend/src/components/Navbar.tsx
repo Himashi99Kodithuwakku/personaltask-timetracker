@@ -8,10 +8,6 @@ import LoginModal from './modals/LoginModal';
 import { useNavigate } from 'react-router-dom';
 
 
-
-
-
-
 function HomeNavbar() {
 
    
@@ -49,30 +45,28 @@ function HomeNavbar() {
 
   return (
     <>
-      <Navbar expand="lg" className={isLoggedIn ? "bg-lightpink" :"bg-body-tertiary"}>
+      <Navbar expand="lg" fixed="top" className= "bg-lightpink">
         <Container fluid>
             <Navbar.Brand className='mx-2 fw-bold' href="#">Task Manager</Navbar.Brand>
             <Navbar.Toggle aria-controls='navbarScroll'></Navbar.Toggle>
             <Navbar.Collapse id="navbarScroll" className='justify-content-end'>
             <div className='d-flex'>
-
-                {!isLoggedIn && (
-                    <>
-                        <Button variant="primary" className="mx-2" onClick={openRegister}>Register </Button>
-                        <Button variant="success" className="mx-2" onClick={openLogin}>Login</Button>
-                    </>
-                )}
-
-
-                {isLoggedIn && (
+                {isLoggedIn ? (
                     <>
                         
-                        <Button variant="danger" className="mx-2" onClick={userLogout}>Logout</Button>
+                        <Button variant="dark" className="mx-2" onClick={userLogout} style={{width:"100px", borderRadius:"50px" ,fontWeight:"bold" }}>Logout</Button>
+                    </>
+                ) : ( 
+
+                
+                    <>
+                        <Button variant="dark" className="mx-2" onClick={openRegister} style={{width:"100px", borderRadius:"50px" ,fontWeight:"bold"}}>Register </Button>
+                        <Button variant="dark" className="mx-2" onClick={openLogin} style={{width:"100px", borderRadius:"50px" ,fontWeight:"bold" }}>Login</Button>
                     </>
                 )}
+                
 
 
-               
             </div>
 
             </Navbar.Collapse>

@@ -1,12 +1,17 @@
 
 import HomeNavbar from "../components/Navbar";
 import SidePanel from "../components/SidePanel";
-import { Container,Row,Col, Button,Table,Pagination} from "react-bootstrap";
+import { Container,Row,Col, Button,Table,Pagination,Form} from "react-bootstrap";
 import { useState } from "react";
 import CreateTaskModal from "../components/modals/CreateTaskModal";
 import AddCategoryModal from "../components/modals/AddCategory";
 import { useEffect } from "react";
 import axios from "axios";
+import EditTaskModal from "../components/modals/EditTaskModal";
+import {toast} from "react-toastify";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlay,faStop,faPenToSquare,faTrash } from '@fortawesome/free-solid-svg-icons';
+
 
 
 
@@ -17,16 +22,16 @@ export default function EditMyTaskPage(){
     const [tasks, setTasks] = useState<any[]>([]);
 
     const [currentPage, setCurrentPage] = useState(1);
-    const rowsPerPage = 7;
+    const rowsPerPage = 6;
 
     const [timers, setTimers] = useState<{[key:string]: number}>({});
     const [runningTask, setRunningTask] = useState<string | null>(null);
     const [totalTimes, setTotalTimes] = useState<{ [key: string]: number }>({});
+    const [showEditTaskModal,setShowEditTaskModal]=useState(false);
+    const [selectedTask,setSelectedtask] = useState<any>(null);
+    const [sortBy, setSortBy ] = useState ("");
 
 
-
-
-   
 
 
     const OpenCreateModal =()=>{
@@ -45,12 +50,15 @@ export default function EditMyTaskPage(){
         setShowCategoryModal(false);
     }
 
+    const OpenEditTaskModal =(task:any)=>{
+        setSelectedtask(task);
+        setShowEditTaskModal(true);
+    }
 
+    const CloseEditTaskModal =()=>{
+        setShowEditTaskModal(false);
+    }
 
-
-        
-
-    
     const loadTasks = async()=>{
         try{
             const token = localStorage.getItem("token");
@@ -75,7 +83,7 @@ export default function EditMyTaskPage(){
 
     const indexOfLastRow = currentPage * rowsPerPage;
     const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-    const currentTasks = tasks.slice(indexOfFirstRow, indexOfLastRow);
+    // const currentTasks = tasks.slice(indexOfFirstRow, indexOfLastRow);
     const totalPages = Math.max(1, Math.ceil(tasks.length / rowsPerPage));
 
     const handlePageChange = (pageNumber: number) => 
@@ -98,6 +106,7 @@ export default function EditMyTaskPage(){
         loadTasks();
     } catch (err) {
         console.error("Failed to update status", err);
+        toast.error("Failed to update status");
     }
     };
 
@@ -111,6 +120,9 @@ export default function EditMyTaskPage(){
                     },
         }
         );
+
+        localStorage.setItem("runningTask", taskId);
+        localStorage.setItem("runningTaskStart", Date.now().toString());
         setRunningTask(taskId);
         setTimers(prev=>({
             ...prev,
@@ -128,9 +140,28 @@ export default function EditMyTaskPage(){
                     },
         }
         );
+
+        localStorage.removeItem("runningTask");
+        localStorage.removeItem("runningTaskStart");
         setRunningTask(null);
         loadTasks();
     };
+
+    useEffect(() => {
+        const savedTask = localStorage.getItem("runningTask");
+        const savedStart = localStorage.getItem("runningTaskStart");
+
+        if(savedTask && savedStart){
+            setRunningTask(savedTask);
+
+            // Calculate elapsed time since timer started
+            const elapsed = Math.floor((Date.now() - parseInt(savedStart)) / 1000);
+            setTimers(prev => ({
+                ...prev,
+                [savedTask]: elapsed
+            }));
+        }
+    }, []);
 
     useEffect(() => {
         let interval: any;
@@ -177,29 +208,115 @@ export default function EditMyTaskPage(){
         console.log("TotalTimes:", totalTimes);
     };
 
+    const deleteTask = async(taskId:string)=>{
+        try{
+            const token = localStorage.getItem("token");
+            await axios.delete(`http://localhost:5011/api/tasks/delete-task/${taskId}`,{
+                 
+            headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    
+
+            });
+
+            toast.success("Task deleted successfully");
+            toast.dismiss();
+            loadTasks();
+
+        }catch(err){
+            console.error("Task deletion failed",err);
+            toast.error("Task deletion failed");
+        }
+    };
+
+    const confirmDeletion = (taskId:string)=>{
+        toast.info(
+            <div>
+                <p> Are you sure you want to delete this task?</p>
+                <div style={{display:"flex",justifyContent:"space-between"  }}>
+                    <Button variant="danger" className="mx-2" size="sm" onClick={()=>deleteTask(taskId)} style={{width:"80px", borderRadius:"50px" }}> YES</Button>
+                    <Button variant="dark" size="sm" onClick={()=> toast.dismiss()} style={{width:"80px", borderRadius:"50px" }}> NO</Button>
+
+                </div>
+            </div>,
+            {
+                autoClose:false,
+                closeOnClick:false,
+            }
+        );
+    };
+
+    const sortedTasks = [...tasks].sort((a,b)=>{
+        switch(sortBy){
+            case "Date" :
+                const dateA = a.due_date ? new Date(a.due_date).getTime() : 0;
+                const dateB = b.due_date ? new Date(b.due_date).getTime() : 0;
+                return dateA-dateB;
+            case "Status" :
+                return(a.is_completed === b.is_completed) ? 0 : a.is_completed ? 1 : -1;
+            
+            case "Time"  :
+                return(totalTimes[a.taskid] || 0 ) - (totalTimes[b.taskid] || 0);
+
+            case "Category" :
+                return(a.categoryname.localeCompare(b.categoryname));
+            default:
+                return 0;
+
+
+
+        }
+    });
+
+    const currentTasks = sortedTasks.slice(indexOfFirstRow, indexOfLastRow);
+
+
     return  (
         <>
         <HomeNavbar/>
         
-        <Container fluid className="vh-100 d-flex p-0">
+        <Container fluid className="vh-100 p-0" style={{backgroundColor:"#f7e8ea", marginTop:"50px"}}>
             <Row className="flex-grow-1 w-100 m-0">
-                <Col md={2} className="p-0 bg-light">
+                <Col md={2} className="p-0">
                       <SidePanel/>
                 </Col>
-                <Col md={10} className="p-4 d-flex flex-column vh-100">
+                <Col md={10} className="p-4" style={{ marginLeft: "220px", height: "calc(100vh - 70px)"}}>
                 <div style={{ flexShrink: 0 }}>
-                    <h3 className="text-center mb-2">EDIT MY TASKS</h3>
+                    <h3 className="text-center mb-2" style={{fontWeight:"bolder"}}>EDIT & MANAGE TASKS</h3>
                     <hr />
-                    <div>
-                    <Button onClick={OpenCreateModal} className="mx-3">Create New Task</Button>
-                    <Button onClick={OpenCategoryModal} className="mx-3">Add New Category</Button>
+                   <div className="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <Button variant="dark" onClick={OpenCreateModal} className="mx-4 px-3" style={{ borderRadius:"50px"}}>Create New Task</Button>
+                            <Button onClick={OpenCategoryModal} className="mx-1 px-3" style={{backgroundColor:"lightpink" , border:"lightpink", color:"black", borderRadius:"50px" }}>Add New Category</Button>
+                        </div>
+                    <Form.Group className="mb-3" >
+                        <Form.Label>Sort by</Form.Label><br></br>
+                            <Form.Select 
+
+                                name="filter"
+                                value={sortBy}
+                                onChange={(e)=>setSortBy(e.target.value)}
+                                style={{width:"200px"}}>
+
+                                    <option value=""> Sort Tasks</option>
+                                    <option value="Date"> Date</option>
+                                    <option value="Time"> Time</option>
+                                    <option value="Category"> Category</option>
+                                    <option value="Status"> Status</option>
+
+                            </Form.Select>
+                    </Form.Group>
+
+                    
                     
                     </div>
                 </div>
+                
                 <div style={{ flex: 1, overflowY: "auto", marginTop: "15px" }} >
-                    <Table striped bordered hover responsive className="mt-4">
+                    <Table striped bordered hover variant="light" className="mt-4">
                         <thead className="text-center">
-                            <tr>
+                            <tr >
                             <th>Task Id</th>
                             <th>Task</th>
                             <th>Category</th>
@@ -223,16 +340,17 @@ export default function EditMyTaskPage(){
                                 <td>{formatTime(timers[task.taskid] || 0)}</td>
                                 <td>
                                     {runningTask === task.taskid ? (
-                                        <Button variant="danger" onClick={() => stopTimer(task.taskid)}>Stop</Button>
+                                        <Button variant="danger" onClick={() => stopTimer(task.taskid)} style={{width:"50px", borderRadius:"50px" }}> <FontAwesomeIcon icon={faStop}/></Button>
                                     ) : (
-                                        <Button variant="success" onClick={() => startTimer(task.taskid)}>Start</Button>
+                                        <Button variant="dark" onClick={() => startTimer(task.taskid)} style={{width:"50px", borderRadius:"50px" }}> <FontAwesomeIcon icon={faPlay}/></Button>
                                     )}
                                 </td>
                                 <td>
                                     <select
-                                    className="form-select form-select-sm"
+                                    className="form-select form-select-sm text-center"
                                     value={task.is_completed ? "completed" : "pending"}
                                     onChange={(e) => taskStatus(task.taskid, e.target.value === "completed")}
+                                    style={{backgroundColor:task.is_completed ? "green" : "orange", color:"white" ,width:"150px", borderRadius:"50px"}}
                                     >
                                 
                                     <option value="pending">Pending</option>
@@ -240,8 +358,8 @@ export default function EditMyTaskPage(){
                                 </select>
                                     
                                 </td>
-                                <td><Button variant="primary">Edit</Button></td>
-                                <td><Button variant="danger">Delete</Button></td>
+                                <td><Button variant="dark" onClick={()=>OpenEditTaskModal(task)} style={{width:"60px", borderRadius:"50px" }}><FontAwesomeIcon icon={faPenToSquare} /></Button></td>
+                                <td><Button variant="danger" onClick={()=> confirmDeletion(task.taskid)} style={{width:"60px", borderRadius:"50px" }}><FontAwesomeIcon icon={faTrash} /></Button></td>
                                 
                                     
                             </tr>
@@ -250,12 +368,13 @@ export default function EditMyTaskPage(){
                         </tbody>
                     </Table>
 
-                      <Pagination className="justify-content-center">
+                      <Pagination className="justify-content-center"  >
                         {Array.from({ length: totalPages }, (_, idx) => (
                             <Pagination.Item
                             key={idx + 1}
                             active={currentPage === idx + 1}
                             onClick={() => handlePageChange(idx + 1)}
+                            
                             >
                             {idx + 1}
                             </Pagination.Item>
@@ -268,6 +387,8 @@ export default function EditMyTaskPage(){
 
         <CreateTaskModal show={showCreateModal} handleClose={CloseCreateModal} onTaskAdded={loadTasks} />
         <AddCategoryModal show={showCategoryModal} handleClose={CloseCategoryModal}/>
+        <EditTaskModal show={showEditTaskModal} handleClose={CloseEditTaskModal} onTaskAdded={loadTasks} task={selectedTask} onTaskUpdated={loadTasks}/>
+
         
            
             

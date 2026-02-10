@@ -13,3 +13,10 @@
 .Toastify__progress-bar {
   background: black !important;
 }
+
+.Toastify__toast--info {
+  background:  lightpink !important;
+  color: black !important;
+  font-weight: bold;
+
+}

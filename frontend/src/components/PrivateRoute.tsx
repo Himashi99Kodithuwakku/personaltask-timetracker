@@ -1,4 +1,3 @@
-// src/components/PrivateRoute.tsx
 import React, { useEffect, useState } from "react";
 import { isTokenExpired, logoutUser } from "../utills/auth";
 import { Spinner, Alert } from "react-bootstrap";
