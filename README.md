@@ -1,8 +1,9 @@
-# personaltask-timetracker
+# Personaltask-timetracker
 Full stack development assignment
 
 # Project Decription 
  * Personal Task Timer Tracker is a web application that allows users to :-
+   
          * User Authentication with Register, Login
          * Create, Edit, and delete tasks
          * Add new task categories 
@@ -28,23 +29,26 @@ Full stack development assignment
   * FontAwesome icons
   * React Toast notifications
 
-# Setup Instructions
-  1.clone the repository  -  go to repository -> find HTTP tab copy link -> opeb folder locally -> type cmd in the path bar and press enter  then it will open the termial  
-  2. In the terminal type git clone paste the copied url and enter  --->  "git clone  https://github.com/<your-username>/<repo-name>.git"
-  3. Next type code . in the terminal press enter button it will open the vs cide 
-  4. open the terminal in the vs code and go to correct path using terminal install dependencies
-  5. cd backend -> npn install
-  6. cd frontend -> npm install
-  7. create .env file in backend folder include below variables
-      PORT = <your_backend_port>
-      JWT_SECRET_KEY = <your_secret_key> 
-      DB_HOST=localhost
-      DB_USER=postgres
-      DB_PASSWORD=your <your_db_password>
-      DB_NAME=personal_task_time_tracker  <--- your db name
-      DB_PORT = <your db port>
+# Setup Instructions :-
+
+- clone the repository  ->  go to repository -> find HTTP tab copy link -> opeb folder locally -> type cmd in the path bar and press enter  then it will open the termial  
+- In the terminal type git clone paste the copied url and enter  --->  "git clone  https://github.com/<your-username>/<repo-name>.git"
+- Next type code . in the terminal press enter button it will open the vs cide 
+- open the terminal in the vs code and go to correct path using terminal install dependencies
+
+        cd backend -> npn install
+        cd frontend -> npm install
+        create .env file in backend folder include below variables
+        
+              PORT = <your_backend_port>
+              JWT_SECRET_KEY = <your_secret_key> 
+              DB_HOST=localhost
+              DB_USER=postgres
+              DB_PASSWORD=your <your_db_password>
+              DB_NAME=personal_task_time_tracker  <--- your db name
+              DB_PORT = <your db port>
       
-  8. Running the app
+* Running the app
     * cd backend -> npm run dev
     * cd frontend -> npm start
 
@@ -56,7 +60,7 @@ Full stack development assignment
     *  Register a new user :- POST /api/auth/user-register
     *  Login with email & password :- POST /api/auth/user-login
 
-  *TASKS
+  * TASKS
     * Create a new task :- POST /api/tasks/add-task
     * Edit task details :- PUT /api/tasks/update-task/:taskId
     * Delete task :-  DELETE /api/tasks/delete-task/:taskId
@@ -65,7 +69,7 @@ Full stack development assignment
     * Load task categories :- GET /api/tasks/load-category
     * Update task status :- PUT /api/tasks/task-status/:taskId
 
-  *TIMER
+  * TIMER
     * Start timer :- POST /api/timer/start-timer
     * Stop timer :- POST /api/timer/stop-timer
     * Get Total time :- POST /api/timer/total-time/:taskId
