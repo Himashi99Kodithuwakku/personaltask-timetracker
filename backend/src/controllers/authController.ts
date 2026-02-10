@@ -59,11 +59,14 @@ export const userLogin = async (req: Request, res:Response)=>{
         if(!valid_password) return res.status(400).json({message:"Incorrect Password, Try again. "});
 
         const token = jwt.sign(
-            {userId : user.rows[0].userId},
+            { userId: user.rows[0].userid, email: user.rows[0].email },
             process.env.JWT_SECRET_KEY as string,
-            {expiresIn :'1d'}
+            {expiresIn :'1h'}
         );
-        res.status(200).json({token, user:{userId:user.rows[0].userId, email:user.rows[0].email}});
+        res.status(200).json({
+            token,
+            user:{ userId:user.rows[0].userid, email:user.rows[0].email }
+        });
 
 
     }catch(err){

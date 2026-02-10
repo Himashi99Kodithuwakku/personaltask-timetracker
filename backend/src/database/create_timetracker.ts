@@ -3,15 +3,14 @@ import pool from "../config/db";
 const timeTrackerTable = async () => {
     try{
         await pool.query(`
-            CREATE TABLE IF DOES NOT EXISTS timeTracker(
+            CREATE TABLE IF NOT EXISTS timeTracker(
                 id SERIAL PRIMARY KEY,
                 trackerId VARCHAR(10) UNIQUE,
                 taskId VARCHAR(10),
                 startTime TIMESTAMP,
                 endTime TIMESTAMP,
                 duration INTERVAL,
-
-            FOREIGN KEY (taskId) REFERENCES userTask(taskId) ON DELETE CASCADE
+                FOREIGN KEY (taskId) REFERENCES userTask(taskId) ON DELETE CASCADE
             );
         `);
 
@@ -29,7 +28,7 @@ const timeTrackerTable = async () => {
         `);
 
         await pool.query(`
-            DROP TRIGGER IF EXISTS trg_tracker_id ON timeTracker,
+            DROP TRIGGER IF EXISTS trg_tracker_id ON timeTracker;
             CREATE TRIGGER trg_tracker_id
             BEFORE INSERT ON timeTracker
             FOR EACH ROW 

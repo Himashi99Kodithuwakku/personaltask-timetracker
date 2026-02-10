@@ -55,6 +55,7 @@ function HomeNavbar() {
             <Navbar.Toggle aria-controls='navbarScroll'></Navbar.Toggle>
             <Navbar.Collapse id="navbarScroll" className='justify-content-end'>
             <div className='d-flex'>
+
                 {!isLoggedIn && (
                     <>
                         <Button variant="primary" className="mx-2" onClick={openRegister}>Register </Button>
@@ -62,12 +63,15 @@ function HomeNavbar() {
                     </>
                 )}
 
+
                 {isLoggedIn && (
                     <>
                         
                         <Button variant="danger" className="mx-2" onClick={userLogout}>Logout</Button>
                     </>
                 )}
+
+
                
             </div>
 

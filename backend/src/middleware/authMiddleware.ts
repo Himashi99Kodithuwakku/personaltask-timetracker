@@ -1,7 +1,13 @@
 import jwt from "jsonwebtoken";
 import { Request,Response,NextFunction } from "express";
 
-export const protect = (req:any, res:Response, next: NextFunction) =>{
+
+interface JwtPayload {
+    userId: string;
+    email?: string;
+}
+
+export const protect = (req:Request & { user?: JwtPayload} , res:Response, next: NextFunction) =>{
     const token = req.headers.authorization?.split(" ")[1];
 
     if(!token) {
@@ -9,7 +15,7 @@ export const protect = (req:any, res:Response, next: NextFunction) =>{
     }
 
     try{
-        const decoded = jwt.verify(token,process.env.JWT_SECRET_KEY as string);
+        const decoded = jwt.verify(token,process.env.JWT_SECRET_KEY as string)as JwtPayload;
         req.user = decoded;
         next();
     }catch{
